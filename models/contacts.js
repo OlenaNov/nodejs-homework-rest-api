@@ -9,8 +9,9 @@ const listContacts = async () => {
     const data = await fs.readFile(contactsPath);
     return JSON.parse(data);
 
-  } catch (error) {
-    return "Information on your request was not found, please check the correctness of the request";
+  } catch (err) {
+    console.log(err);
+    return err;
   }
 };
 
