@@ -1,14 +1,91 @@
-// const fs = require('fs/promises')
+const fs = require('fs/promises');
+const path = require('path');
+const { nanoid }  = require('nanoid');
 
-const listContacts = async () => {}
+const contactsPath = path.join(__dirname, "contacts.json");
 
-const getContactById = async (contactId) => {}
+const listContacts = async () => {
+  try {
+    const data = await fs.readFile(contactsPath);
+    return JSON.parse(data);
 
-const removeContact = async (contactId) => {}
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+};
 
-const addContact = async (body) => {}
+const getContactById = async (contactId) => {
+  try {
+    const data = await fs.readFile(contactsPath);
+    const contacts = JSON.parse(data);
+    const contact = contacts.filter(item => item.id === contactId);
+    
+    if(!contact.length) {
+      return null;
+    };
 
-const updateContact = async (contactId, body) => {}
+    return contact;
+
+  } catch (error) {
+    return "Information on your request was not found, please check the correctness of the request";
+  }
+
+};
+
+const removeContact = async (contactId) => {
+    try {
+      const data = await fs.readFile(contactsPath);
+      const contacts = JSON.parse(data);
+      const idx = contacts.findIndex(item => item.id === contactId);
+
+      if(idx === -1) {
+        return null;
+      };
+
+      const [result] = contacts.splice(idx, 1);
+      await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+      return result;
+      
+  } catch (error) {
+    return "Information on your request was not found, please check the correctness of the request";
+  }
+};
+
+const addContact = async (body) => {
+  const newContact = {
+    ...body,
+    id: nanoid()
+  };
+
+  try {
+    const data = await fs.readFile(contactsPath);
+    const contacts = JSON.parse(data);
+    contacts.push(newContact);
+    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+    return newContact;
+    
+  } catch (error) {
+    return "To create a new contact, fill in the required fields";
+  }
+};
+
+const updateContact = async (contactId, body) => {
+  const data = await fs.readFile(contactsPath);
+  const contacts = JSON.parse(data);
+  const newContacts = contacts.map(item => {
+    if(item.id === contactId) {
+      return ({
+        ...item,
+        ...body
+      });
+    };
+    return item;
+  });
+
+  await fs.writeFile(contactsPath, JSON.stringify(newContacts, null, 2));
+  return newContacts.filter(item => item.id === contactId);
+};
 
 module.exports = {
   listContacts,
