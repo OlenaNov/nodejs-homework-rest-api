@@ -2,6 +2,7 @@ const API = require('../models/contacts');
 const { schemaPost } = require('../schemas/schemaPost');
 const { schemaPut } = require('../schemas/schemaPut');
 const catchAsync = require('../utils/catchAsync');
+const Contact = require('../models/contactModel');
 
 
 exports.getContacts = catchAsync(async (req, res, next) => {
@@ -36,20 +37,25 @@ exports.getContact = catchAsync(async (req, res, next) => {
 exports.postContact = catchAsync(async (req, res, next) => {
 
   const body = await schemaPost.validateAsync({ ...req.body });
+  const newContact = await Contact.create(body);
 
-  const newContact = await API.addContact(body);
+  res.status(200).json({
+    contact: newContact,
+  })
+
+  // const newContact = await API.addContact(body);
   
-  if(!newContact) {
-    res.json({
-      status: 400,
-      message: "missing required name field"
-    })
-  } else {
-    res.json({ 
-      status: 201,
-      newContact
-    })
-  }
+  // if(!newContact) {
+  //   res.json({
+  //     status: 400,
+  //     message: "missing required name field"
+  //   })
+  // } else {
+  //   res.json({ 
+  //     status: 201,
+  //     newContact
+  //   })
+  // }
 
 });
 
