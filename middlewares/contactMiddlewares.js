@@ -51,7 +51,9 @@ const checkUpdateContactData = catchAsync(async (req, res, next) => {
 
     const contactExists = await Contact.exists({ email: value.email });
 
-    if(contactExists) {
+    const userIsTheSame = contactExists ? req.contact.id === contactExists.id : null;
+
+    if(contactExists && userIsTheSame) {
         return next(new AppError(400, 'Contact with this email already exists..'));
     };
 
