@@ -12,11 +12,13 @@ const app = express()
 
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
 
-mongoose.connect(process.env.MONGO_URL).then(() => {
+const { DB_HOST } = process.env;
+mongoose.connect(DB_HOST)
+.then(() => {
   console.log('MONGO DB SUCCESS CONNECTED');
 })
 .catch((err) => {
-  console.log(err);
+  console.log(err.message);
   process.exit(1);
 })
 

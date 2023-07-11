@@ -1,13 +1,10 @@
-const API = require('../models/contacts');
-const { schemaPost } = require('../schemas/schemaPost');
-const { schemaPut } = require('../schemas/schemaPut');
-const catchAsync = require('../utils/catchAsync');
-const Contact = require('../models/contactModel');
+const catchAsync = require('../helpers/catchAsync');
+const { Contact } = require('../models/contactModel');
 
 
-exports.getContacts = catchAsync(async (req, res, next) => {
+exports.getContacts = catchAsync(async (_, res) => {
 
-      const contacts = await API.listContacts();
+      const contacts = await Contact.find({}, "-__v");
     
       res.json({ 
         status: 200,
@@ -15,10 +12,10 @@ exports.getContacts = catchAsync(async (req, res, next) => {
       });
 });
 
-exports.getContact = catchAsync(async (req, res, next) => {
+exports.getContact = catchAsync(async (req, res) => {
     const { contactId } = req.params;
-    const contact = await API.getContactById(contactId);
-    
+    const contact = await Contact.findById(contactId);
+
     if(!contact) {
       res.json({ 
         status: 404,
@@ -34,34 +31,21 @@ exports.getContact = catchAsync(async (req, res, next) => {
     };
   });
 
-exports.postContact = catchAsync(async (req, res, next) => {
+exports.postContact = catchAsync(async (req, res) => {
 
-  const body = await schemaPost.validateAsync({ ...req.body });
-  const newContact = await Contact.create(body);
+  const newContact = await Contact.create({
+    favorite: false,
+    ...req.body
+  });
 
-  res.status(200).json({
-    contact: newContact,
-  })
+  newContact.password = undefined;
 
-  // const newContact = await API.addContact(body);
-  
-  // if(!newContact) {
-  //   res.json({
-  //     status: 400,
-  //     message: "missing required name field"
-  //   })
-  // } else {
-  //   res.json({ 
-  //     status: 201,
-  //     newContact
-  //   })
-  // }
-
+  res.status(201).json(newContact);
 });
 
-exports.deleteContact = catchAsync(async (req, res, next) => {
+exports.deleteContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
-  const removedContact = await API.removeContact(contactId);
+  const removedContact = await Contact.findByIdAndDelete(contactId);
 
   if(!removedContact) {
     res.json({ 
@@ -78,19 +62,12 @@ exports.deleteContact = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.putContact = catchAsync(async (req, res, next) => {
+exports.putContact = catchAsync(async (req, res) => {
 
     const { contactId } = req.params;
-    const body = await schemaPut.validateAsync({...req.body});
 
-    if(!Object.keys(body).length) {
-      return res.json({
-        status: 400,
-        "message": "missing fields"
-      });
-    }
-    const result = await API.updateContact(contactId, body);
-  
+    const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true });
+
     if(!result) {
       return res.json({
         status: 404,
@@ -100,6 +77,25 @@ exports.putContact = catchAsync(async (req, res, next) => {
       return res.json({
         status: 200,
         result
-      })
-      }
+      });
+      };
+});
+
+exports.patchContact = catchAsync(async (req, res) => {
+
+  const { contactId } = req.params;
+
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true });
+
+  if(!result) {
+    return res.json({
+      status: 404,
+      "message": "Not found"
+    })
+  } else {
+    return res.json({
+      status: 200,
+      result
+    });
+  }
 });
