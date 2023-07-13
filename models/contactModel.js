@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose');
+const { Schema, Types, model } = require('mongoose');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 
@@ -29,6 +29,11 @@ const contactSchema = new Schema(
       type: String,
       required: true,
       select: false
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      require: [true, 'Contact must have an owner..']
     }
   }, {
     timestamps: true,

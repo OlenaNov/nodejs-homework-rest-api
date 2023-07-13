@@ -57,7 +57,7 @@ exports.deleteContact = catchAsync(async (req, res) => {
     res.json({
       status: 200,
       message: "contact deleted",
-      removedContact
+      contact: removedContact
     })
   }
 });
@@ -76,7 +76,7 @@ exports.putContact = catchAsync(async (req, res) => {
     } else {
       return res.json({
         status: 200,
-        result
+        contact: result
       });
       };
 });
@@ -95,7 +95,7 @@ exports.patchContact = catchAsync(async (req, res) => {
   } else {
     return res.json({
       status: 200,
-      result
+      contact: result
     });
   }
 });
