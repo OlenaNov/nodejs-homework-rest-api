@@ -1,15 +1,30 @@
+const { userSubscriptionEnum } = require('../constants/userSubscriptionEnum');
 const catchAsync = require('../helpers/catchAsync');
 const { Contact } = require('../models/contactModel');
 
 
-exports.getContacts = catchAsync(async (_, res) => {
+exports.getContacts = catchAsync(async (req, res) => {
 
-      const contacts = await Contact.find({}, "-__v");
+  const { limit, page, sort, order, search } = req.query;
+
+  const findOptions = search 
+    ? { $or: [ { name: { $regex: search, $options: 'i' } }, { phone: { $regex: search } }] } 
+    : {};
+
+  if(search && req.user.subscription === userSubscriptionEnum.STARTER) {
+    findOptions.$or.forEach((option) => {option.owner = req.user})
+  };
+
+  if(!search && req.user.subscription === userSubscriptionEnum.STARTER) {
+    findOptions.owner = req.user;
+  };
+      
+  const contacts = await Contact.find(findOptions, "-__v");
     
-      res.json({ 
-        status: 200,
-        contacts 
-      });
+  res.json({ 
+    status: 200,
+    contacts 
+  });
 });
 
 exports.getContact = catchAsync(async (req, res) => {
@@ -35,6 +50,7 @@ exports.postContact = catchAsync(async (req, res) => {
 
   const newContact = await Contact.create({
     favorite: false,
+    owner: req.user.id,
     ...req.body
   });
 
