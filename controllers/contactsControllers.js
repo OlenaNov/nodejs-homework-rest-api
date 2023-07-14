@@ -5,7 +5,7 @@ const { Contact } = require('../models/contactModel');
 
 exports.getContacts = catchAsync(async (req, res) => {
 
-  const { limit, page, sort, order, search } = req.query;
+  const { limit, page, sort = 'name', order, search } = req.query;
 
   const findOptions = search 
     ? { $or: [ { name: { $regex: search, $options: 'i' } }, { phone: { $regex: search } }] } 
@@ -19,11 +19,22 @@ exports.getContacts = catchAsync(async (req, res) => {
     findOptions.owner = req.user;
   };
       
-  const contacts = await Contact.find(findOptions, "-__v");
+  const contactsQuery = Contact.find(findOptions, "-__v");
+
+  contactsQuery.sort(`${order === 'desc' ? '-' : ''}${sort}`);
+
+  const paginationPage = +page || 1;
+  const paginationLimit = +limit || 5;
+  const skip = (paginationPage - 1) * paginationLimit;
+  contactsQuery.skip(skip).limit(paginationLimit);
+
+  const contacts = await contactsQuery;
+  const total = await Contact.count(findOptions);
     
   res.json({ 
     status: 200,
-    contacts 
+    total,
+    contacts
   });
 });
 
