@@ -7,7 +7,7 @@ const mongoose = require('mongoose')
 dotenv.config({ path: './.env' });
 
 const contactsRouter = require('./routes/api/contactsRoutes');
-const usersRouter = require('./routes/api/authRoutes');
+const usersRouter = require('./routes/api/userRoutes');
 
 const app = express()
 

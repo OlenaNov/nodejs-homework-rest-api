@@ -14,7 +14,7 @@ exports.signup = catchAsync(async (req, res) => {
     newUser.password = undefined;
 
     const token = signToken(newUser.id)
-
+    console.log(token);
     if(newUser) {
         return res.json({
             status: 201,
@@ -27,7 +27,6 @@ exports.signup = catchAsync(async (req, res) => {
         })
     }
 });
-
 
 exports.login = catchAsync( async (req, res) => {
     const { email, password } = req.body;
@@ -74,3 +73,20 @@ exports.getMe = (req, res) => {
         }
     });
 };
+
+exports.logout = catchAsync(async (req, res, next) => {
+    const { id } = req.user;
+    console.log(id);
+    const user = await User.findByIdAndUpdate(id, { token: '' });
+
+    if(!user) {
+        return res.json({
+          status: 401,
+          "message": "Not authorized"
+        })
+      } else {
+        return res.json({
+          status: 204
+        });
+      }
+});

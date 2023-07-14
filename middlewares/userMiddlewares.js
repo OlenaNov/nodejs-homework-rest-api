@@ -46,7 +46,6 @@ const protect = catchAsync(async (req,res, next) => {
     next();
 });
 
-
 const allowFor = (...subscriptions) => (req, res, next) => {
     if(!subscriptions.includes(req.user.subscription)) {
         next(new AppError(403, 'You are not allowed to this resource..'))
