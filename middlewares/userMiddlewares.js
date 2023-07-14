@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const uuid = require('uuid').v4;
 
 const AppError = require("../helpers/appError");
 const catchAsync = require("../helpers/catchAsync");
-const { signupValidatorRegisterUser, User } = require("../models/userModel");
+const { signupValidatorRegisterUser, User, updateValidatorPassword } = require("../models/userModel");
+const ImageService = require('../services/imageService');
 
 const checkSignupUserData = catchAsync(async (req, res, next) => {
     
@@ -54,9 +57,33 @@ const allowFor = (...subscriptions) => (req, res, next) => {
     next();
 };
 
+const checkUpdatePassword = catchAsync(async (req, res, next) => {
+    const { currentPassword, newPassword } = req.body;
+    const { id } = req.user;
+
+    if(!updateValidatorPassword(newPassword)) {
+        throw new AppError(401, "Don't valid password, please try again..");
+    };
+    
+    const user = await User.findById(id).select('password');
+
+    if(!(await user.checkPassword(currentPassword, user.password))) {
+        throw new AppError(401, 'Current password is wrong..');
+    };
+
+    user.password = newPassword;
+    await user.save();
+
+    next();
+});
+
+const uploadUserAvatar = ImageService.upload('avatarURL');
+
 module.exports = {
     checkSignupUserData,
     protect,
-    allowFor
+    allowFor,
+    checkUpdatePassword,
+    uploadUserAvatar
 };
 

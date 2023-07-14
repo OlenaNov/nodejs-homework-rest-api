@@ -1,7 +1,10 @@
 const { Schema, model } = require('mongoose');
-const { userSubscriptionEnum } = require('../constants/userSubscriptionEnum');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
+const crypto = require('crypto');
+
+const { userSubscriptionEnum } = require('../constants/userSubscriptionEnum');
+const { regex } = require('../constants');
 
 const userSchema = new Schema({
         password: {
@@ -19,6 +22,7 @@ const userSchema = new Schema({
           enum: Object.values(userSubscriptionEnum), 
           default: "starter"
         },
+        avatarURL: String, 
         token: {
           type: String,
           default: null,
@@ -29,6 +33,12 @@ const userSchema = new Schema({
 });
 
 userSchema.pre('save', async function(next) {
+    if(this.isNew) {
+      const emailHash = crypto.createHash('md5').update(this.email).digest('hex');
+
+      this.avatarURL = `https://www.gravatar.com/avatar/${emailHash}.jpg?d=retro`;
+    }
+
     if(!this.isModified('password')) {
       return next();
     };
@@ -61,8 +71,19 @@ const signupValidatorRegisterUser = data => Joi.object()
           })
     .validate(data);
 
+const updateValidatorPassword = data => Joi.object()
+  .options({ abortEarly: false })
+  .keys({
+    newPassword: Joi.string(),
+    // .regex(regex.PASSWORD_REGEX)
+    // .required(),
+
+    currentPassword: Joi.string()
+    // .required()
+  }).validate(data);
 
 module.exports = {
     User,
-    signupValidatorRegisterUser
+    signupValidatorRegisterUser,
+    updateValidatorPassword
 };

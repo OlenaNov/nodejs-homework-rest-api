@@ -62,7 +62,7 @@ exports.getContact = catchAsync(async (req, res) => {
         contact
         })
     };
-  });
+});
 
 exports.postContact = catchAsync(async (req, res) => {
 

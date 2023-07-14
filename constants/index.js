@@ -1,5 +1,7 @@
 const { userSubscriptionEnum } = require('./userSubscriptionEnum');
+const { regex } = require('./regex');
 
 module.exports = {
-    userSubscriptionEnum
+    userSubscriptionEnum,
+    regex
 };
