@@ -18,7 +18,7 @@ const checkContactById = catchAsync(async (req, res, next) => {
     if (!contact) {
         return next(new AppError(404, 'Contact does not exist..'));
     };
-
+    
     req.contact = contact;
     next();
 
@@ -51,7 +51,9 @@ const checkUpdateContactData = catchAsync(async (req, res, next) => {
 
     const contactExists = await Contact.exists({ email: value.email });
 
-    if(contactExists) {
+    const userIsTheSame = contactExists ? req.contact.id === contactExists.id : null;
+
+    if(contactExists && userIsTheSame) {
         return next(new AppError(400, 'Contact with this email already exists..'));
     };
 
@@ -60,6 +62,7 @@ const checkUpdateContactData = catchAsync(async (req, res, next) => {
 });
 
 const checkUpdateIsFavorite = catchAsync(async (req, res, next) => {
+
     const { error, value } = updateValidatorFavorite(req.body);
 
     if(error) {
