@@ -18,7 +18,7 @@ const checkContactById = catchAsync(async (req, res, next) => {
     if (!contact) {
         return next(new AppError(404, 'Contact does not exist..'));
     };
-
+    
     req.contact = contact;
     next();
 
@@ -62,6 +62,7 @@ const checkUpdateContactData = catchAsync(async (req, res, next) => {
 });
 
 const checkUpdateIsFavorite = catchAsync(async (req, res, next) => {
+
     const { error, value } = updateValidatorFavorite(req.body);
 
     if(error) {

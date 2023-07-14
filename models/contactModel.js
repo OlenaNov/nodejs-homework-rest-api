@@ -3,7 +3,6 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 
 // const PHONE_REGEX = /^(\d{3}) \d{3}-\d{4}$/;
-// const PASSWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])(?=.{8,128})/;
 
 const contactSchema = new Schema(
   {
@@ -24,11 +23,6 @@ const contactSchema = new Schema(
     favorite: {
       type: Boolean,
       default: false,
-    },
-    password: {
-      type: String,
-      required: true,
-      select: false
     },
     owner: {
       type: Schema.Types.ObjectId,
@@ -73,11 +67,7 @@ const createValidatorPost = data => Joi.object()
         .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
         .required(),
 
-    favorite: Joi.bool(),
-
-    password: Joi.string()
-    // .regex(PASSWD_REGEX)
-    .required(),
+    favorite: Joi.bool()
 })
   .validate(data);
 

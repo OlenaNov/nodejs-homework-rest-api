@@ -42,6 +42,13 @@ exports.getContact = catchAsync(async (req, res) => {
     const { contactId } = req.params;
     const contact = await Contact.findById(contactId);
 
+    if(req.user.subscription !== userSubscriptionEnum.PRO && req.user.id !== contact.owner.toString()) {
+      return res.json({ 
+        status: 404,
+        message: 'Not found'
+        })
+    };
+
     if(!contact) {
       res.json({ 
         status: 404,
@@ -74,6 +81,13 @@ exports.deleteContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
   const removedContact = await Contact.findByIdAndDelete(contactId);
 
+  if(req.user.subscription !== userSubscriptionEnum.PRO && req.user.id !== removedContact.owner.toString()) {
+    return res.json({ 
+      status: 404,
+      message: 'Not found'
+      })
+  };
+
   if(!removedContact) {
     res.json({ 
       status: 404,
@@ -95,6 +109,13 @@ exports.putContact = catchAsync(async (req, res) => {
 
     const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true });
 
+  if(req.user.subscription !== userSubscriptionEnum.PRO && req.user.id !== result.owner.toString()) {
+    return res.json({ 
+      status: 404,
+      message: 'Not found'
+      })
+  };
+
     if(!result) {
       return res.json({
         status: 404,
@@ -113,6 +134,13 @@ exports.patchContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
 
   const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true });
+
+  if(req.user.subscription !== userSubscriptionEnum.PRO && req.user.id !== result.owner.toString()) {
+    return res.json({ 
+      status: 404,
+      message: 'Not found'
+      })
+  };
 
   if(!result) {
     return res.json({

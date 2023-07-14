@@ -47,7 +47,7 @@ const User = model('User', userSchema);
 const signupValidatorRegisterUser = data => Joi.object()
     .options({ abortEarly: false })
     .keys({
-
+      
         password: Joi.string()
           .required(),
 
