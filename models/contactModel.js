@@ -1,8 +1,8 @@
 const { Schema, Types, model } = require('mongoose');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
+const { regex } = require('../constants');
 
-// const PHONE_REGEX = /^(\d{3}) \d{3}-\d{4}$/;
 
 const contactSchema = new Schema(
   {
@@ -17,7 +17,7 @@ const contactSchema = new Schema(
     },
     phone: {
       type: String,
-      // match: PHONE_REGEX,
+      // match: regex.PHONE_REGEX,
       required: true
     },
     favorite: {
@@ -91,6 +91,7 @@ const updateValidatorPut = data => Joi.object()
     .options({ abortEarly: false })
     .keys({
     favorite: Joi.bool()
+    .required()
   }).validate(data);
   
 
