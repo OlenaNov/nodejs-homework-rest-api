@@ -273,3 +273,42 @@ exports.verification = catchAsync(async (req, res) => {
     });
     
 });
+
+exports.reVerification = catchAsync(async (req, res) => {
+    const { email } = req.body;
+
+    if(!email) {
+        throw new AppError(400, "Missing required field email..");
+    };
+
+    const user = await User.findOne({ email });
+
+    if(user.verify) {
+        throw new AppError(400, "Verification has already been passed..");
+    };
+
+    const verificationUrl = `${req.protocol}://${req.get('host')}/api/users/verify/${user.verificationToken}`;
+
+    const transport = nodemailer.createTransport({
+        host: "sandbox.smtp.mailtrap.io",
+        port: 2525,
+        auth: {
+          user: "287399fefbae6a",
+          pass: "b31a48e9901f9d"
+        }
+      });
+
+    const emailConfig = {
+      from: 'Todos app admin <admin@example.com>',
+      to: user.email,
+      subject: 'Please click on the link to confirm registration',
+      text: verificationUrl
+    };
+
+    await transport.sendMail(emailConfig);
+
+        return res.json({
+            status: 200,
+            message: 'Verification instruction sent to email..'
+        });
+});
