@@ -73,7 +73,7 @@ exports.login = catchAsync( async (req, res) => {
 
     if(!user.verification) {
         throw new AppError(401, 'User not found');
-    }
+    };
 
     user.password = undefined;
 
@@ -264,7 +264,7 @@ exports.verification = catchAsync(async (req, res) => {
 
     user.verificationToken = null;
     user.verify = true;
-    
+
     await user.save();
 
     return res.json({
