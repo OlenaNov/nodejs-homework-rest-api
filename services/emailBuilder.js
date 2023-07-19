@@ -30,5 +30,6 @@ exports.emailBuilder = (user, resetUrl) => {
    return data;
  }, function(error) {
    console.error(error);
- });
+ }) 
+};
  
