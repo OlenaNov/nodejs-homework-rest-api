@@ -69,7 +69,7 @@ exports.getMe = (req, res) => {
             status: 401,
             "message": "Not authorized"
          })
-    }
+    };
 
     res.json({
         status: 200,
@@ -138,7 +138,7 @@ exports.forgotPassword = catchAsync(async (req, res) => {
             message: 'Password reset instruction sent to email..'
         });
     };
-    // one time password
+
     const otp = user.createPasswordResetToken();
 
     await user.save();
@@ -151,6 +151,11 @@ exports.forgotPassword = catchAsync(async (req, res) => {
         
         const result = await emailBuilder(user, resetUrl);
         console.log(result);
+
+        if(!result) {
+            throw new AppError(500, 'Error');
+        }
+        
         // const config = {
         //     host: 'smtp-relay.sendinblue.com',
         //     port: 587,
@@ -160,13 +165,19 @@ exports.forgotPassword = catchAsync(async (req, res) => {
         //         pass: process.env.EMAIL_PASSWORD
         //     },
         //   };
+        // const transporter = nodemailer.createTransport(config);
 
         // const email = {
-        //     from: 'logupp.13@gmail.com',
+        //     from: 'lsendinblue@sendinblue.com',
         //     to: user.email,
-            
-
+        // subject: 'Nodemailer test',
+        //   text: 'Привет. Мы тестируем отправку писем!',
         // }
+
+        // transporter
+        //   .sendMail(emailOptions)
+        //   .then(info => console.log(info))
+        //   .catch(err => console.log(err));
 
 
     } catch (err) {
@@ -178,58 +189,12 @@ exports.forgotPassword = catchAsync(async (req, res) => {
         await user.save();
     };
 
+    await user.save();
+
     return res.json({
         status: 200,
         message: 'Password reset instruction sent to email..'
     });
-
-//     try {
-//         const resetUrl = `${req.protocol}://${req.get('host')}/api/users/set-new-password/${otp}`;
-//         console.log('||=============>>>>>>>>>>>>>>>');
-//         console.log(resetUrl);
-//         console.log('<<<<<<<<<<<<<<<=============||');
-
-//         const config = {
-//             host: 'smtp-relay.sendinblue.com',
-//             port: 587,
-//             secure: true,
-//             auth: {
-//                 user: process.env.EMAIL_USER,
-//                 pass: process.env.EMAIL_PASSWORD
-//             },
-//           };
-
-//         const transporter = nodemailer.createTransport(config);
-
-
-
-// const emailOptions = {
-//   from: 'Todos app admin <admin@example.com>',
-//   to: user.email,
-//   subject: 'Nodemailer test',
-//   text: 'Привет. Мы тестируем отправку писем!',
-// };
-
-// transporter
-//   .sendMail(emailOptions)
-//   .then(info => console.log(info))
-//   .catch(err => console.log(err));
-
-//     } catch (err) {
-//         console.log(err);
-
-//         user.createPasswordResetToken = undefined;
-//         user.passwordResetExpires = undefined;
-
-//         await user.save();
-//     };
-
-//     // await user.save();
-
-//     return res.json({
-//         status: 200,
-//         message: 'Password reset instruction sent to email..'
-//     });
     
 });
 
@@ -257,4 +222,28 @@ exports.resetPassword = catchAsync(async (req, res) => {
     res.json({
         user
     });
+});
+
+exports.verification = catchAsync(async (req, res) => {
+    const { verificationToken } = req.params;
+
+    const user = await User.findOne({ verificationToken });
+
+    if(!user) {
+        return res.json({
+            status: 404,
+            message: 'User not found'
+        });
+    };
+
+    user.verificationToken = null;
+    user.verify = true;
+    
+    await user.save();
+
+    return res.json({
+        status: 200,
+        message: 'Verification successful'
+    });
+    
 });
