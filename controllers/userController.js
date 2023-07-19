@@ -1,5 +1,6 @@
 const crypto = require('crypto');
-// const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
+const uuid = require('uuid').v4;
 const { userSubscriptionEnum } = require("../constants/userSubscriptionEnum");
 const AppError = require("../helpers/appError");
 const catchAsync = require("../helpers/catchAsync");
@@ -11,11 +12,32 @@ const { emailBuilder } = require('../services/emailBuilder');
 
 
 exports.signup = catchAsync(async (req, res) => {
-    
+    const verificationToken = uuid();
     const newUser = await User.create({
         ...req.body,
-        subscription: userSubscriptionEnum.STARTER
+        subscription: userSubscriptionEnum.STARTER,
+        verificationToken
     });
+
+    const verificationUrl = `${req.protocol}://${req.get('host')}/api/users/verify/${verificationToken}`;
+
+    const transport = nodemailer.createTransport({
+        host: "sandbox.smtp.mailtrap.io",
+        port: 2525,
+        auth: {
+          user: "287399fefbae6a",
+          pass: "b31a48e9901f9d"
+        }
+      });
+
+    const emailConfig = {
+      from: 'Todos app admin <admin@example.com>',
+      to: newUser.email,
+      subject: 'Please click on the link to confirm registration',
+      text: verificationUrl
+    };
+
+    await transport.sendMail(emailConfig);
 
     newUser.password = undefined;
 
@@ -48,6 +70,10 @@ exports.login = catchAsync( async (req, res) => {
     if(!passwordIsValid) {
         throw new AppError(401, "Email or password is wrong");
     };
+
+    if(!user.verification) {
+        throw new AppError(401, 'User not found');
+    }
 
     user.password = undefined;
 
