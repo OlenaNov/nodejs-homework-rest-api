@@ -26,7 +26,9 @@ const userSchema = new Schema({
         token: {
           type: String,
           default: null,
-        }
+        },
+        passwordResetToken: String,
+        passwordResetExpires: Date
 }, {
     timestamps: true,
     versionKey: false
@@ -47,9 +49,18 @@ userSchema.pre('save', async function(next) {
     this.password = await bcrypt.hash(this.password, salt);
 
     next();
-})
+});
 
 userSchema.methods.checkPassword = (candidate, hash) => bcrypt.compare(candidate, hash);
+
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex'); // generate string of random symbols
+
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
 
 const User = model('User', userSchema);
 

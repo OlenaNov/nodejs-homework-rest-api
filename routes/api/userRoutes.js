@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const { signup, login, getMe, logout, updateAvatar, updatePassword } = require('../../controllers/userController');
+const { signup, login, getMe, logout, updateAvatar, updatePassword, forgotPassword, resetPassword } = require('../../controllers/userController');
 const { checkSignupUserData, protect, checkUpdatePassword, uploadUserAvatar } = require('../../middlewares/userMiddlewares');
 
 router.post('/register', checkSignupUserData, signup);
 router.post('/login', login);
+router.post('/restore-password', forgotPassword); 
+router.post('/set-new-password/:otp', resetPassword);
+
 
 router.use(protect);
 
