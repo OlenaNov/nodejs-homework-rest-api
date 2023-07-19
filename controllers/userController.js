@@ -1,9 +1,14 @@
+const crypto = require('crypto');
+// const nodemailer = require('nodemailer');
 const { userSubscriptionEnum } = require("../constants/userSubscriptionEnum");
 const AppError = require("../helpers/appError");
 const catchAsync = require("../helpers/catchAsync");
 const { signToken } = require("../helpers/signToken");
 const { User } = require("../models/userModel");
 const ImageService = require("../services/imageService");
+const { log } = require('console');
+const { emailBuilder } = require('../services/emailBuilder');
+
 
 exports.signup = catchAsync(async (req, res) => {
     
@@ -119,5 +124,137 @@ exports.updatePassword = catchAsync(async (req, res) => {
         status: 200,
         message: 'Success, password is updated!',
         user: req.user
+    });
+});
+
+exports.forgotPassword = catchAsync(async (req, res) => {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if(!user) {
+        return res.json({
+            status: 200,
+            message: 'Password reset instruction sent to email..'
+        });
+    };
+    // one time password
+    const otp = user.createPasswordResetToken();
+
+    await user.save();
+
+    try {
+
+        const resetUrl = `${req.protocol}://${req.get('host')}/api/users/set-new-password/${otp}`;
+
+        console.log(resetUrl);
+        
+        const result = await emailBuilder(user, resetUrl);
+        console.log(result);
+        // const config = {
+        //     host: 'smtp-relay.sendinblue.com',
+        //     port: 587,
+        //     secure: true,
+        //     auth: {
+        //         user: process.env.EMAIL_USER,
+        //         pass: process.env.EMAIL_PASSWORD
+        //     },
+        //   };
+
+        // const email = {
+        //     from: 'logupp.13@gmail.com',
+        //     to: user.email,
+            
+
+        // }
+
+
+    } catch (err) {
+        console.log(err);
+
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
+    };
+
+    return res.json({
+        status: 200,
+        message: 'Password reset instruction sent to email..'
+    });
+
+//     try {
+//         const resetUrl = `${req.protocol}://${req.get('host')}/api/users/set-new-password/${otp}`;
+//         console.log('||=============>>>>>>>>>>>>>>>');
+//         console.log(resetUrl);
+//         console.log('<<<<<<<<<<<<<<<=============||');
+
+//         const config = {
+//             host: 'smtp-relay.sendinblue.com',
+//             port: 587,
+//             secure: true,
+//             auth: {
+//                 user: process.env.EMAIL_USER,
+//                 pass: process.env.EMAIL_PASSWORD
+//             },
+//           };
+
+//         const transporter = nodemailer.createTransport(config);
+
+
+
+// const emailOptions = {
+//   from: 'Todos app admin <admin@example.com>',
+//   to: user.email,
+//   subject: 'Nodemailer test',
+//   text: 'Привет. Мы тестируем отправку писем!',
+// };
+
+// transporter
+//   .sendMail(emailOptions)
+//   .then(info => console.log(info))
+//   .catch(err => console.log(err));
+
+//     } catch (err) {
+//         console.log(err);
+
+//         user.createPasswordResetToken = undefined;
+//         user.passwordResetExpires = undefined;
+
+//         await user.save();
+//     };
+
+//     // await user.save();
+
+//     return res.json({
+//         status: 200,
+//         message: 'Password reset instruction sent to email..'
+//     });
+    
+});
+
+exports.resetPassword = catchAsync(async (req, res) => {
+
+    const hashedToken = crypto.createHash('sha256').update(req.params.otp).digest('hex');
+
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if(!user) {
+        throw new AppError(400, 'Token is invalid..');
+    };
+
+    user.password = req.body.password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    user.password = undefined;
+
+    res.json({
+        user
     });
 });
